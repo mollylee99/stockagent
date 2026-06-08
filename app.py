@@ -1,33 +1,34 @@
 import streamlit as st
+import yfinance as yf
 import google.generativeai as genai
 
-# 시스템 지침을 로드하여 모델에게 주입
-SYSTEM_INSTRUCTION = """
-[지침: 전문 에퀴티 리서치 애널리스트]
-당신은 글로벌 헤지펀드 수석 애널리스트입니다. 
-분석 대상 기업의 티커를 입력받으면 다음 8단계 프로세스를 엄격히 수행하십시오.
-1. 데이터 식별 및 신뢰성 검증
-2. 매크로 및 산업 사이클 분석
-3. 연결재무제표 정밀 분석 (LaTeX 및 엑셀 수식 필수)
-4. 다차원 주식가치평가
-5. 다면적 위험 분석
-6. 비정형 데이터(뉴스/리포트) 분석
-7. 투자 의사결정 선언
-8. 구글 문서/시트 연동 및 결과 출력
-"""
+st.set_page_config(page_title="Equity Research", layout="wide")
+st.title("📈 AI Equity Research Analyst")
 
-def setup_model(api_key):
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-2.5-flash', system_instruction=SYSTEM_INSTRUCTION)
-
-# Streamlit UI 구성
-st.title("Equity Research Analyst Agent")
+ticker_input = st.sidebar.text_input("Enter Ticker (e.g., PLTR)", "PLTR")
 api_key = st.sidebar.text_input("Gemini API Key", type="password")
-ticker = st.text_input("분석할 티커 입력 (예: PLTR)")
 
-if st.button("분석 실행"):
-    model = setup_model(api_key)
-    with st.spinner("전문 분석 리포트 생성 중..."):
-        response = model.generate_content(f"{ticker} 분석을 시작해.")
-        st.markdown(response.text)
-        # 구글 문서 저장 로직은 추후 Google API 인증 추가 필요
+if ticker_input:
+    # 1. 기초 데이터 가져오기
+    stock = yf.Ticker(ticker_input)
+    info = stock.info
+    
+    # 대시보드 생성
+    st.subheader(f"{ticker_input} 기초 데이터 대시보드")
+    col1, col2, col3 = st.columns(3)
+    
+    col1.metric("최신 주가", f"${info.get('currentPrice', 'N/A')}")
+    col2.metric("시가총액", f"${info.get('marketCap', 0):,}")
+    col3.metric("52주 최고가", f"${info.get('fiftyTwoWeekHigh', 'N/A')}")
+    
+    st.write(f"**총 발행 주식 수:** {info.get('sharesOutstanding', 'N/A'):,}")
+    st.write(f"**주당순이익(EPS):** {info.get('trailingEps', 'N/A')}")
+
+    # 2. 제미나이 정밀 분석
+    if st.sidebar.button("정밀 분석 시작"):
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-pro')
+        with st.spinner('분석 중...'):
+            prompt = f"{ticker_input}에 대해 지침에 따라 8단계 분석을 수행해."
+            response = model.generate_content(prompt)
+            st.markdown(response.text)
