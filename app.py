@@ -27,7 +27,7 @@ if ticker_input:
     # 2. 제미나이 정밀 분석
     if st.sidebar.button("정밀 분석 시작"):
         genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-pro')
+        model = genai.GenerativeModel('gemini-2.5-flesh')
         with st.spinner('분석 중...'):
             prompt = f"{ticker_input}에 대해 지침에 따라 8단계 분석을 수행해."
             response = model.generate_content(prompt)
