@@ -18,7 +18,7 @@ SYSTEM_INSTRUCTION = """
 
 def setup_model(api_key):
     genai.configure(api_key=api_key)
-    return genai.GenerativeModel('gemini-1.5-pro', system_instruction=SYSTEM_INSTRUCTION)
+    return genai.GenerativeModel('gemini-2.5-Flash', system_instruction=SYSTEM_INSTRUCTION)
 
 # Streamlit UI 구성
 st.title("Equity Research Analyst Agent")
